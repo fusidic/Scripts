@@ -14,7 +14,7 @@ read -t 15 -p "Input destinate config filename: " filename
 filename=${filename:-fq.mk.yaml}
 
 echo "import user config to ${filename}"
-cat ${path1}user.yaml >> ${path1}${filename}
+cat ${path1}user >> ${path1}${filename}
 
 echo "export Sys-env"
 export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7891
