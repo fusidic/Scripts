@@ -16,6 +16,19 @@ close_selinux()
     echo "selinux diabled !!!"
 }
 
+disable_swap()
+{
+    echo "diable swap..."
+    echo "swap status for now :"
+    free -m
+    echo "swap off"
+    swapoff -a
+    echo "swap status for now :"
+    free -m
+    sed -i '/swap/d' /etc/fstab
+    echo "swap has been disabled & reboot required !!"
+}
+
 change_registry_tsinghua()
 {
     echo "mirror.tuna.tsinghua.edu.cn"
@@ -55,15 +68,57 @@ print_system_info()
     echo "**********************************"
 }
 
+set_timezone()
+{
+    # installation
+    echo "set timezone to Asia/Shanghai"
+    yum install chrony
+    # enable chronyd
+    systemctl start chronyd
+    systemctl enable chronyd
+    # set timezone to Shanghai
+    timedatectl set-timezone Asia/Shanghai
+    # launch it
+    timedatectl set-ntp yes
+}
 
+set_static_ip()
+{
+    echo "check it at /etc/sysconfig/network-scripts/"
+    echo "TODO"
+}
+
+disable_firewall_for_centos()
+{
+    echo "installing firewalld ..."
+    sudo yum install -y firewalld
+    echo "firewalld status"
+    sudo systemctl status firewalld
+    echo "firewalld disabled"
+    sudo systemctl stop firewalld
+    sudo systemctl disabled firewalld
+    sudo systemctl mask --now firewalld
+}
+
+disable_firewall_for_ubuntu()
+{
+    echo "installing firewalld ..."
+    sudo ufw status
+    sudo ufw disable
+}
+
+disable_SELinux()
+{
+    echo "SELinux status now"
+    sestatus
+    sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
+    echo "SELinux has been disabled"
+    sestatus
+}
 
 help()
 {
-    echo "1) install_software	   6) close_selinux	    11) add_user"
-    echo "2) install_python	   7) install_docker	    12) exit"
-    echo "3) set_static_ip	   8) change_docker_mirror  13) help:"
-    echo "4) close_firewalld	   9) change_swap"
-    echo "5) set_hostname		  10) install_ohmyzsh"
+    echo "Just Press ENTER"
 }
 
 # basic softwares
@@ -84,24 +139,6 @@ install_docker()
     sudo systemctl start docker
 }
 
-disable_swap()
-{
-    echo "diable swap..."
-    echo "swap status for now :"
-    free -m
-    echo "swap off"
-    swapoff -a
-    echo "swap status for now :"
-    free -m
-    sed -i '/swap/d' /etc/fstab
-    echo "swap has been disabled & reboot required !!"
-}
-
-set_static_ip()
-{
-    echo "check it at /etc/sysconfig/network-scripts/"
-    echo "TODO"
-}
 
 install_golang()
 {
@@ -114,11 +151,23 @@ install_golang()
 
 install_and_config_zsh()
 {
-    yum install zsh
+    yum install -y zsh
     wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    wget https://github.com/fusidic/Scripts/blob/master/config/zshrc -O ~/.zshrc
+    wget https://raw.githubusercontent.com/fusidic/Scripts/master/config/zshrc -O ~/.zshrc
     source ~/.zshrc
+}
+
+kube_init()
+{
+    cat ./config/kubernetes.repo >> /etc/yum.repos.d/kubernetes.repo
+    # Set SELinux in permissive mode (effectively disabling it)
+    sudo setenforce 0
+    sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+    sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+    sudo systemctl enable --now kubelet
 }
 
 install_golang_centos7_only()
@@ -129,6 +178,7 @@ install_golang_centos7_only()
     sudo yum install golang
     echo "finished"
     which go
+    go env
 }
 
 install_golang_ubuntu()
@@ -141,7 +191,7 @@ install_golang_ubuntu()
 main()
 {
     print_system_info
-    centos_func="add_user set_static_ip close_selinux disable_swap change_registry_tsinghua change_registry_aliyun install_basic_softwares install_docker install_golang install_and_config_zsh help exit"
+    centos_func="add_user set_static_ip close_selinux disable_swap change_registry_tsinghua change_registry_aliyun set_timezone set_static_ip disable_firewall_for_centos disable_firewall_for_ubuntu disable_SELinux help install_basic_softwares install_docker install_golang install_and_config_zsh kube_init exit"
     select centos_func in $centos_func:
     do
         case $REPLY in
@@ -157,22 +207,35 @@ main()
         ;;
         6) change_registry_aliyun
         ;;
-        7) install_basic_softwares
+        7) set_timezone
         ;;
-        8) install_docker
+        8) set_static_ip
         ;;
-        9) install_golang
+        9) disable_firewall_for_centos
         ;;
-        10) install_and_config_zsh 
+        10) disable_firewall_for_ubuntu
         ;;
-        11) help
+        11) disable_SELinux
         ;;
-        12) exit
+        12) help
+        ;;
+        13) install_basic_softwares
+        ;;
+        14) install_docker
+        ;;
+        15) install_golang
+        ;;
+        16) install_and_config_zsh
+        ;;
+        17) kube_init
+        ;;
+        18) exit
         ;;
         *) echo "select anything u want"
         ;;
         esac
     done
+    echo "Reboot required !!"
 }
 
 main
