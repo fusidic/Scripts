@@ -77,11 +77,11 @@ install_basic_softwares()
 
 install_docker()
 {
-    yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
-    yum install -y yum-utils
-    yum-config-namager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum install docker-ce docker-ce-cli containerd.io
-    systemctl start docker
+    sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+    sudo yum install -y yum-utils
+    sudo yum-config-namager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum install docker-ce docker-ce-cli containerd.io
+    sudo systemctl start docker
 }
 
 disable_swap()
@@ -117,7 +117,7 @@ install_and_config_zsh()
     yum install zsh
     wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    https://raw.githubusercontent.com/fusidic/Scripts/master/config/zshrc -O ~/.zshrc
+    wget https://github.com/fusidic/Scripts/blob/master/config/zshrc -O ~/.zshrc
     source ~/.zshrc
 }
 
