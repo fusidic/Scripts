@@ -155,12 +155,14 @@ install_and_config_zsh()
     wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
     wget https://raw.githubusercontent.com/fusidic/Scripts/master/config/zshrc -O ~/.zshrc
+    echo "alias k=kubectl" >> ~/.zshrc
+    echo "complete -F __start_kubectl k" >> ~/.zshrc
     source ~/.zshrc
 }
 
 kube_init()
 {
-    cat ./config/kubernetes.repo >> /etc/yum.repos.d/kubernetes.repo
+    cat ../config/kubernetes.repo >> /etc/yum.repos.d/kubernetes.repo
     # Set SELinux in permissive mode (effectively disabling it)
     sudo setenforce 0
     sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
@@ -168,6 +170,13 @@ kube_init()
     sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 
     sudo systemctl enable --now kubelet
+    sudo mkdir /etc/docker
+    sudo cat ../config/docker_daemon_for_k8s.json >> /etc/docker/daemon.json
+    mkdir -p /etc/systemd/system/docker.service.d
+    # Restart Docker
+    systemctl daemon-reload
+    systemctl restart docker
+    sudo systemctl enable docker
 }
 
 install_golang_centos7_only()
@@ -186,6 +195,11 @@ install_golang_ubuntu()
     sudo add-apt-repository ppa:longsleep/golang-backports 
     sudo apt-get update
     sudo apt-get install golang-go
+}
+
+auto_run()
+{
+    
 }
 
 main()
@@ -230,6 +244,10 @@ main()
         17) kube_init
         ;;
         18) exit
+        ;;
+        exit) exit
+        ;;
+        20) auto_run
         ;;
         *) echo "select anything u want"
         ;;
