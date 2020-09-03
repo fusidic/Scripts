@@ -126,7 +126,7 @@ help()
 install_basic_softwares()
 {
     echo "start to install basic softwares ..."
-    sudo yum install -y ca-certificates ssl-cert wget curl vim* net-tools git
+    sudo yum install -y ca-certificates ssl-cert wget curl vim* net-tools git gcc
 }
 
 
