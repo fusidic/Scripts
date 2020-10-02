@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: eagle-1
+spec:
+  containers:
+    - name: service
+      image: k8s.gcr.io/pause:3.2
+      resources:
+        limits:
+          cpu: 11m
+          memory: 10Mi
+        requests:
+          cpu: 10m
+          memory: 10Mi
